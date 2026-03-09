@@ -1,1 +1,67 @@
+name: Build And Release
 
+"on":
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version without the v prefix
+        required: true
+        default: "1.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell Gallery
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+
+      - name: Install PS2EXE
+        shell: pwsh
+        run: |
+          Install-Module -Name ps2exe -Scope CurrentUser -Force
+
+      - name: Build executable
+        shell: pwsh
+        run: |
+          $version = "${{ github.event.inputs.version }}"
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          Invoke-ps2exe `
+            -inputFile ".\Clean-CDrive.ps1" `
+            -outputFile ".\dist\CDriveCleanupTool.exe" `
+            -title "C盘空间清理工具" `
+            -product "C盘空间清理工具" `
+            -company "Muyi663" `
+            -version $version `
+            -noConsole
+
+          Copy-Item ".\README.md" ".\dist\README.zh-CN.md" -Force
+          Copy-Item ".\Start-Cleanup-Tool.bat" ".\dist\Start-Cleanup-Tool.bat" -Force
+
+          Compress-Archive `
+            -Path ".\dist\CDriveCleanupTool.exe", ".\dist\README.zh-CN.md", ".\dist\Start-Cleanup-Tool.bat" `
+            -DestinationPath ".\dist\CDriveCleanupTool-v$version.zip" `
+            -Force
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: v${{ github.event.inputs.version }}
+          body: |
+            云端自动打包发布。
+
+            包含内容：
+            - CDriveCleanupTool.exe
+            - CDriveCleanupTool-v${{ github.event.inputs.version }}.zip
+          files: |
+            .\dist\CDriveCleanupTool.exe
+            .\dist\CDriveCleanupTool-v${{ github.event.inputs.version }}.zip
