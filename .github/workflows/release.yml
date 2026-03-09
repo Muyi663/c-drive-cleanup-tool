@@ -7,6 +7,9 @@ name: Build And Release
         description: Release version without the v prefix
         required: true
         default: "1.0.0"
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: write
@@ -33,12 +36,19 @@ jobs:
         shell: pwsh
         run: |
           $version = "${{ github.event.inputs.version }}"
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            $version = "${{ github.ref_name }}"
+          }
+          if ($version.StartsWith('v')) {
+            $version = $version.Substring(1)
+          }
+
           New-Item -ItemType Directory -Path dist -Force | Out-Null
           Invoke-ps2exe `
             -inputFile ".\Clean-CDrive.ps1" `
             -outputFile ".\dist\CDriveCleanupTool.exe" `
-            -title "C盘空间清理工具" `
-            -product "C盘空间清理工具" `
+            -title "C Drive Cleanup Tool" `
+            -product "C Drive Cleanup Tool" `
             -company "Muyi663" `
             -version $version `
             -noConsole
@@ -53,14 +63,15 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.event.inputs.version }}
-          name: v${{ github.event.inputs.version }}
+          tag_name: ${{ github.event.inputs.version && format('v{0}', github.event.inputs.version) || github.ref_name }}
+          name: ${{ github.event.inputs.version && format('v{0}', github.event.inputs.version) || github.ref_name }}
+          overwrite_files: true
           body: |
-            云端自动打包发布。
+            Automated cloud build release.
 
-            包含内容：
+            Included assets:
             - CDriveCleanupTool.exe
-            - CDriveCleanupTool-v${{ github.event.inputs.version }}.zip
+            - CDriveCleanupTool-v*.zip
           files: |
-            .\dist\CDriveCleanupTool.exe
-            .\dist\CDriveCleanupTool-v${{ github.event.inputs.version }}.zip
+            dist/CDriveCleanupTool.exe
+            dist/CDriveCleanupTool-v*.zip
