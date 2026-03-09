@@ -1,3 +1,4 @@
+[Uploading README.md…]()
 ﻿# C Drive Cleanup Tool
 
 A compact Windows cleanup tool built with PowerShell + WPF.
@@ -46,3 +47,4 @@ git push -u origin main
 ```
 
 If you want, this project can also be packaged into an `.exe` later with PS2EXE or a similar tool.
+
