@@ -44,10 +44,9 @@ jobs:
             -noConsole
 
           Copy-Item ".\README.md" ".\dist\README.zh-CN.md" -Force
-          Copy-Item ".\Start-Cleanup-Tool.bat" ".\dist\Start-Cleanup-Tool.bat" -Force
 
           Compress-Archive `
-            -Path ".\dist\CDriveCleanupTool.exe", ".\dist\README.zh-CN.md", ".\dist\Start-Cleanup-Tool.bat" `
+            -Path ".\dist\CDriveCleanupTool.exe", ".\dist\README.zh-CN.md" `
             -DestinationPath ".\dist\CDriveCleanupTool-v$version.zip" `
             -Force
 
